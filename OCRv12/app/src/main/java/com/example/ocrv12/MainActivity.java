@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -17,6 +18,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,21 +32,43 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
-    Bitmap image;
-    private TessBaseAPI mTess;
-    String datapath = "";
     private static final int PICK_IMAGE = 100;
+    Bitmap bitmapImage;
+    ImageView imageView;
+    String datapath = "";
     Uri imageUri;
     Button pck;
+    private TessBaseAPI mTess;
+    private Mat imageMat, processedMat;
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS: {
+                    Log.i("OpenCV", "OpenCV loaded successfully");
+                    imageMat = new Mat();
+                    processedMat = new Mat();
+                }
+                break;
+                default: {
+                    super.onManagerConnected(status);
+                }
+                break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        imageView = this.findViewById(R.id.iv_test_OCRImage);
+
         pck = findViewById(R.id.btn_getimg);
-        image = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+//        bitmapImage = BitmapFactory.decodeResource(getResources(), R.drawable.test);
         String language = "eng";
-        datapath = getFilesDir()+ "/tesseract/";
+        datapath = getFilesDir() + "/tesseract/";
         mTess = new TessBaseAPI();
         checkFile(new File(datapath + "tessdata/"));
         mTess.init(datapath, language);
@@ -51,36 +80,49 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!OpenCVLoader.initDebug()) {
+            Log.d("OpenCV", "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+        } else {
+            Log.d("OpenCV", "OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+    }
+
     private void openGallery() {
         Intent gallery = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
         startActivityForResult(gallery, PICK_IMAGE);
     }
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == PICK_IMAGE)
-        {
+        if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             imageUri = data.getData();
-            ImageView iv = this.findViewById(R.id.iv_test_OCRImage);
-            iv.setImageURI(imageUri);
-            try
-            {
+            try {
                 InputStream is = getContentResolver().openInputStream(imageUri);
-                image = BitmapFactory.decodeStream(is);
-            }
-            catch(Exception e)
-            {
-                Toast.makeText(this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                bitmapImage = BitmapFactory.decodeStream(is);
+                Utils.bitmapToMat(bitmapImage, imageMat);
+                Mat processedMat = SkewCorrection.correctPerspective(imageMat);
+                Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+                Bitmap processedbmp = Bitmap.createBitmap(processedMat.cols(), processedMat.rows(), Bitmap.Config.RGB_565);
+                Utils.matToBitmap(processedMat, processedbmp);
+                imageView.setImageBitmap(processedbmp);
+            } catch (Exception e) {
+                Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }
 
     private void checkFile(File dir) {
-        if (!dir.exists()&& dir.mkdirs()){
+        if (!dir.exists() && dir.mkdirs()) {
             copyFiles();
         }
-        if(dir.exists()) {
-            String datafilepath = datapath+ "/tessdata/eng.traineddata";
+        if (dir.exists()) {
+            String datafilepath = datapath + "/tessdata/eng.traineddata";
             File datafile = new File(datafilepath);
             if (!datafile.exists()) {
                 copyFiles();
@@ -113,17 +155,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void runOCR(View view){
-        try
-        {
+    public void runOCR(View view) {
+        try {
             String OCRresult = null;
-            mTess.setImage(image);
+            mTess.setImage(bitmapImage);
             OCRresult = mTess.getUTF8Text();
             TextView tv_OCR_Result = (TextView) findViewById(R.id.tv_OCR_Result);
             tv_OCR_Result.setText(OCRresult);
-        }
-        catch (Exception e) {
-            Toast.makeText(this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
 
     }
