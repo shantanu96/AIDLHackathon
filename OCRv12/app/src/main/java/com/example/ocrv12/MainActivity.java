@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
                 InputStream is = getContentResolver().openInputStream(imageUri);
                 bitmapImage = BitmapFactory.decodeStream(is);
                 Utils.bitmapToMat(bitmapImage, imageMat);
-                Mat processedMat = PreProcessing.initial(imageMat);
+                Mat processedMat = SkewCorrection.correctPerspective(imageMat);
                 Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
                 Bitmap processedbmp = Bitmap.createBitmap(processedMat.cols(), processedMat.rows(), Bitmap.Config.RGB_565);
                 Utils.matToBitmap(processedMat, processedbmp);
