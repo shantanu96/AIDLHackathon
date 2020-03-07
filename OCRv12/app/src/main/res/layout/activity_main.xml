@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:weightSum="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/ImageContainer"
+        android:layout_weight="0.75"
+        android:scrollbars="vertical">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iv_test_OCRImage"
+            android:src="@drawable/test"/>
+    </LinearLayout>
+    <Button
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:text="Pick Image"
+        android:id="@+id/btn_getimg"
+        android:layout_gravity="center"
+        android:background="@color/colorPrimary"
+        android:textColor="#ffffff"/>
+    <Button
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:text="Run OCR"
+        android:id="@+id/btn_OCR"
+        android:layout_gravity="center"
+        android:background="@color/colorPrimary"
+        android:textColor="#ffffff"
+        android:onClick="runOCR"
+        android:layout_marginTop="5dp"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:scrollbars="vertical"
+        android:layout_marginBottom="10dp">
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="OCR Text will appear here"
+            android:id="@+id/tv_OCR_Result"
+            android:textSize="18dp"
+            android:scrollbars="vertical"
+            android:layout_gravity="center"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:background="#dedede"
+            android:textColor="#a3a3a3"
+            android:layout_marginBottom="10dp"
+            />
+    </ScrollView>
+
+
+</LinearLayout>
