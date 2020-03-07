@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/iv_test_OCRImage"
-            android:src="@drawable/test"/>
+            android:src="@drawable/ic_launcher_background"/>
     </LinearLayout>
     <Button
         android:layout_width="150dp"
