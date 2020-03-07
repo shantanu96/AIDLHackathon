@@ -105,11 +105,12 @@ public class MainActivity extends AppCompatActivity {
             try {
                 InputStream is = getContentResolver().openInputStream(imageUri);
                 bitmapImage = BitmapFactory.decodeStream(is);
-                Bitmap processedMat = PreProcessing.scaleImage(bitmapImage,300,300);
+                Utils.bitmapToMat(bitmapImage, imageMat);
+                Mat processedMat = PreProcessing.initial(imageMat);
                 Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
-                Bitmap processedbmp = Bitmap.createBitmap(bitmapImage.getWidth(), bitmapImage.getHeight(), conf);
-                //Utils.matToBitmap(processedMat, processedbmp);
-                imageView.setImageBitmap(processedMat);
+                Bitmap processedbmp = Bitmap.createBitmap(processedMat.cols(), processedMat.rows(), Bitmap.Config.RGB_565);
+                Utils.matToBitmap(processedMat, processedbmp);
+                imageView.setImageBitmap(processedbmp);
             } catch (Exception e) {
                 Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
